@@ -6,11 +6,11 @@ import oututil
 import search
 
 def main():
-  counter = (analyze.getfrequencies('letter1.txt') 
-             + analyze.getfrequencies('letter2.txt')
-             + analyze.getfrequencies('letter3.txt'))
+  counter = (analyze.getfrequencies('data/letter1.txt')
+             + analyze.getfrequencies('data/letter2.txt')
+             + analyze.getfrequencies('data/letter3.txt'))
   corpus = []
-  for text in ('letter1.txt', 'letter2.txt', 'letter3.txt'):
+  for text in ('data/letter1.txt', 'data/letter2.txt', 'data/letter3.txt'):
     f = codecs.open(text, encoding='utf-8')
     for line in f:
       corpus += line.split()
@@ -39,8 +39,8 @@ def main():
     u'=': 'k',
   }
   cipher_chars, freqs = zip(*sorted(counter.items(),
-                             key=operator.itemgetter(1),
-                             reverse=True))
+                            key=operator.itemgetter(1),
+                            reverse=True))
   print cipher_chars, freqs
   search.astar(corpus, cipher_chars, freqs)
   # oututil.show_hist(counter, hypothesis)
