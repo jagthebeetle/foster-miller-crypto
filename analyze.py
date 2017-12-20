@@ -13,17 +13,13 @@ def getfrequencies(text):
   return characters
 
 
-def translate(text, propose=None):
+def translate(text, propose):
   characters = collections.Counter()
 
   f = codecs.open(text, encoding='utf-8')
+  plaintext = []
   for line in f:
-    for c in line:
-      if c not in ('\n', ' '):
-        characters[c] += 1
-    if propose:
-      for old_c, proposed_c in propose.iteritems():
-        line = line.replace(old_c, proposed_c)
-      print line.rstrip()
-  print '---'
-  return characters
+    for old_c, proposed_c in propose.iteritems():
+      line = line.replace(old_c, proposed_c)
+    plaintext.append(line)
+  return plaintext
