@@ -14,7 +14,7 @@ with open('words/google-10000-english.txt', 'r') as words:
 THRESHOLD = 0.95
 
 
-def is_pattern_valid(partial):
+def is_known_word(partial):
   no_punct = partial.replace('?', '').replace('.', '').replace(',', '')
   pattern = '^' + re.sub(r'[^A-Za-z]', '.', no_punct) + '$'
   fuzz = re.compile(pattern, re.IGNORECASE)
@@ -36,12 +36,12 @@ def score_substitution(corpus, cipher_char, proposed_char):
       substitutions.append(new_word)
   valid_substitutions = 0
   for word in substitutions:
-    if is_pattern_valid(word):
+    if is_known_word(word):
       valid_substitutions += 1
   return valid_substitutions, len(substitutions)
 
 
-def sort_proposal(candidate):
+def score_proposal(candidate):
   correct, total = candidate[1]
   return correct / (total * (1 + FREQ_RANK[candidate[0]]))
 
@@ -59,13 +59,12 @@ def astar(corpus, cipher_chars, frequencies, mapped='', unmapped=ENGLISH_FREQ,
     for candidate in unmapped:
       correct, total = score_substitution(corpus, cipher_char, candidate)
       proposal_scores[candidate] = (correct, total)
-    candidates = sorted(proposal_scores.items(), key=sort_proposal, reverse=True)
-    if 'eotsyihlrwanmuvgd'.startswith(mapped):
-      print proposal_scores
+    candidates = sorted(proposal_scores.items(), key=score_proposal,
+                        reverse=True)
     for candidate, score in candidates:
       total_correct, total_changed = total_score
       new_correct, new_changed = score
-      if (total_correct+new_correct) / (total_changed + new_changed) >= threshold:
+      if (total_correct+new_correct) / (total_changed+new_changed) >= threshold:
         astar(update_corpus(corpus, cipher_char, candidate), # new corpus
               cipher_chars, frequencies, # constant
               mapped+candidate, unmapped.replace(candidate, ''), # current map
