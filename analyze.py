@@ -2,7 +2,7 @@ import codecs
 import collections
 
 
-def getfrequencies(text='letter1.txt'):
+def getfrequencies(text):
   characters = collections.Counter()
 
   f = codecs.open(text, encoding='utf-8')
@@ -13,7 +13,7 @@ def getfrequencies(text='letter1.txt'):
   return characters
 
 
-def translate(text='letter1.txt', propose=None):
+def translate(text, propose=None):
   characters = collections.Counter()
 
   f = codecs.open(text, encoding='utf-8')
