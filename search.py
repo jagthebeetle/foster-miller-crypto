@@ -10,22 +10,41 @@ FREQ_RANK = {}
 for i, c in enumerate(ENGLISH_FREQ):
   FREQ_RANK[c] = i+1
 with open('words/google-10000-english.txt', 'r') as words:
-  WORDS = words.read().splitlines()
+  WORDS = {}
+  _WORDS = words.read().splitlines()
+  for c in ENGLISH_FREQ:
+    WORDS[c] = []
+    for word in _WORDS:
+      if c in word:
+        WORDS[c].append(word)
 THRESHOLD = 0.95
 
 
-def is_known_word(partial):
+def is_known_word(partial, dictionary):
   no_punct = partial.replace('?', '').replace('.', '').replace(',', '')
   pattern = '^' + re.sub(r'[^A-Za-z]', '.', no_punct) + '$'
   fuzz = re.compile(pattern, re.IGNORECASE)
-  for word in WORDS:
+  for word in dictionary:
     if fuzz.match(word):
       return True
   return False
 
+def is_known_word_manual(partial, dictionary):
+  no_punct = partial.replace('?', '').replace('.', '').replace(',', '')
+  pattern = re.sub(r'[^A-Za-z]', '.', no_punct)
+  for word in dictionary:
+    if len(word) != len(pattern):
+      continue
+    matches = True
+    for i, c in enumerate(pattern):
+      matches = matches and (c == '.' or word[i] == c)
+    if matches:
+      return True
+  return False
+  
 
 def update_corpus(corpus, to_replace, replace_with):
-  return set([w.replace(to_replace, replace_with) for w in corpus])
+  return [w.replace(to_replace, replace_with) for w in corpus]
 
 
 def score_substitution(corpus, cipher_char, proposed_char):
@@ -36,7 +55,7 @@ def score_substitution(corpus, cipher_char, proposed_char):
       substitutions.append(new_word)
   valid_substitutions = 0
   for word in substitutions:
-    if is_known_word(word):
+    if is_known_word_manual(word, WORDS[proposed_char]):
       valid_substitutions += 1
   return valid_substitutions, len(substitutions)
 
@@ -62,13 +81,14 @@ def astar(corpus, cipher_chars, frequencies, mapped='', unmapped=ENGLISH_FREQ,
     candidates = sorted(proposal_scores.items(), key=score_proposal,
                         reverse=True)
     for candidate, score in candidates:
-      total_correct, total_changed = total_score
-      new_correct, new_changed = score
-      if (total_correct+new_correct) / (total_changed+new_changed) >= threshold:
+      proposed_correct = total_score[0] + score[0]
+      proposed_total = total_score[1] + score[1]
+      if proposed_correct / proposed_total >= threshold:
+        print mapped, print_score((proposed_correct, proposed_total))
         astar(update_corpus(corpus, cipher_char, candidate), # new corpus
               cipher_chars, frequencies, # constant
               mapped+candidate, unmapped.replace(candidate, ''), # current map
               begin+1, # tentatively 'solved' chars
-              (total_correct+new_correct, total_changed + new_changed),
+              (proposed_correct, proposed_total),
               threshold * .995) # exponentially decaying threshold
     return # once all scores above threshold have been recursed.
